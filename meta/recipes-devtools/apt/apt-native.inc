@@ -3,7 +3,6 @@ inherit native
 
 DEPENDS += "dpkg-native gettext-native db-native curl-native xz-native"
 PACKAGES = ""
-USE_NLS = "yes"
 
 SRC_URI += "file://db_linking_hack.patch \
             file://0001-Revert-always-run-dpkg-configure-a-at-the-end-of-our.patch \
