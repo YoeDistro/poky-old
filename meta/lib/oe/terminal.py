@@ -67,7 +67,7 @@ class Gnome(XTerminal):
         import tempfile
         pidfile = tempfile.NamedTemporaryFile(delete = False).name
         try:
-            sh_cmd = "oe-gnome-terminal-phonehome " + pidfile + " " + sh_cmd
+            sh_cmd = bb.utils.which(os.getenv('PATH'), "oe-gnome-terminal-phonehome") + " " + pidfile + " " + sh_cmd
             XTerminal.__init__(self, sh_cmd, title, env, d)
             while os.stat(pidfile).st_size <= 0:
                 continue
@@ -231,7 +231,6 @@ def spawn(name, sh_cmd, title=None, env=None, d=None):
         output = output.decode("utf-8")
     if pipe.returncode != 0:
         raise ExecutionError(sh_cmd, pipe.returncode, output)
-
 def check_tmux_pane_size(tmux):
     import subprocess as sub
     # On older tmux versions (<1.9), return false. The reason
