@@ -131,10 +131,10 @@ class Sdk(object, metaclass=ABCMeta):
 
     def install_locales(self, pm):
         # This is only relevant for glibc
-        if self.d.getVar("TCLIBC") != "glibc":
+        if self.d.getVar("TCLIBC", True) != "glibc":
             return
 
-        linguas = self.d.getVar("SDKIMAGE_LINGUAS")
+        linguas = self.d.getVar("SDKIMAGE_LINGUAS", True)
         if linguas:
             import fnmatch
             # Install the binary locales
