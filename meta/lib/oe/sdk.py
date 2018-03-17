@@ -10,7 +10,7 @@ import traceback
 def generate_locale_archive(d, rootfs):
     # Pretty sure we don't need this for SDK archive generation but
     # keeping it to be safe...
-    target_arch = d.getVar('SDK_ARCH')
+    target_arch = d.getVar('SDK_ARCH', True)
     locale_arch_options = { \
         "arm": ["--uint32-align=4", "--little-endian"],
         "armeb": ["--uint32-align=4", "--big-endian"],
@@ -37,7 +37,7 @@ def generate_locale_archive(d, rootfs):
         bb.error("locale_arch_options not found for target_arch=" + target_arch)
         bb.fatal("unknown arch:" + target_arch + " for locale_arch_options")
 
-    localedir = oe.path.join(rootfs, d.getVar("libdir_nativesdk"), "locale")
+    localedir = oe.path.join(rootfs, d.getVar("libdir_nativesdk", True), "locale")
     # Need to set this so cross-localedef knows where the archive is
     env = dict(os.environ)
     env["LOCALEARCHIVE"] = oe.path.join(localedir, "locale-archive")
