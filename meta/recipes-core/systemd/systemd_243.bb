@@ -298,6 +298,10 @@ do_install() {
 	install -Dm 0644 ${WORKDIR}/99-default.preset ${D}${systemd_unitdir}/system-preset/99-default.preset
 }
 
+do_install_append_qemumips () {
+       # Mips qemu is extremely slow, allow more time for the hwdb update
+       sed -i -e s#TimeoutSec=90s#TimeoutSec=180s# ${D}${systemd_unitdir}/system/systemd-hwdb-update.service
+}
 
 python populate_packages_prepend (){
     systemdlibdir = d.getVar("rootlibdir")
