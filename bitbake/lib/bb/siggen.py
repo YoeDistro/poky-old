@@ -441,7 +441,7 @@ class SignatureGeneratorUniHashMixIn(object):
             else:
                 bb.debug(2, 'No reported unihash for %s:%s from %s' % (tid, taskhash, self.server))
         except hashserv.HashConnectionError as e:
-            bb.warn('Error contacting Hash Equivalence Server %s: %s' (self.server, str(e)))
+            bb.warn('Error contacting Hash Equivalence Server %s: %s' % (self.server, str(e)))
 
         self.unitaskhashes[key] = unihash
         return unihash
@@ -505,7 +505,7 @@ class SignatureGeneratorUniHashMixIn(object):
                 else:
                     bb.debug(1, 'Reported task %s as unihash %s to %s' % (taskhash, unihash, self.server))
             except hashserv.HashConnectionError as e:
-                bb.warn('Error contacting Hash Equivalence Server %s: %s' (self.server, str(e)))
+                bb.warn('Error contacting Hash Equivalence Server %s: %s' % (self.server, str(e)))
         finally:
             if sigfile:
                 sigfile.close()
