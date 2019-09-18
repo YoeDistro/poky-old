@@ -40,7 +40,13 @@ class Client(object):
     def connect_unix(self, path):
         def connect_sock():
             s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            s.connect(path)
+            # AF_UNIX has path length issues so chdir here to workaround
+            cwd = os.getcwd()
+            try:
+                os.chdir(os.path.dirname(path))
+                s.connect(os.path.basename(path))
+            finally:
+                os.chdir(cwd)
             return s
 
         self._connect_sock = connect_sock

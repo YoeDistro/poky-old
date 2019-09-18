@@ -365,8 +365,11 @@ class Server(object):
         def cleanup():
             os.unlink(path)
 
+        # Work around path length limits in AF_UNIX
+        os.chdir(os.path.dirname(path))
+
         self.server = self.loop.run_until_complete(
-            asyncio.start_unix_server(self.handle_client, path, loop=self.loop)
+            asyncio.start_unix_server(self.handle_client, os.path.basename(path), loop=self.loop)
         )
         logger.info('Listening on %r' % path)
 
