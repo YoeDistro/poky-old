@@ -1,6 +1,11 @@
 require rsync.inc
 
-SRC_URI += "file://makefile-no-rebuild.patch"
+SRC_URI += "file://makefile-no-rebuild.patch \
+           file://CVE-2016-9840.patch \
+           file://CVE-2016-9841.patch \
+           file://CVE-2016-9842.patch \
+           file://CVE-2016-9843.patch \
+"
 
 SRC_URI[md5sum] = "1581a588fde9d89f6bc6201e8129afaf"
 SRC_URI[sha256sum] = "55cc554efec5fdaad70de921cd5a5eeb6c29a95524c715f3bbf849235b0800c0"
