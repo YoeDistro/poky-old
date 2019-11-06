@@ -49,6 +49,8 @@ S = "${WORKDIR}/Linux-PAM-${PV}"
 
 inherit autotools gettext pkgconfig
 
+CVE_PRODUCT = "linux-pam"
+
 PACKAGECONFIG[audit] = "--enable-audit,--disable-audit,audit,"
 
 PACKAGES += "${PN}-runtime ${PN}-xtests"
