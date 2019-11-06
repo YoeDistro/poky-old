@@ -168,3 +168,5 @@ FILES_${PN}-engines = "${libdir}/engines-1.1"
 RDEPENDS_${PN}-ptest += "perl-module-file-spec-functions bash python"
 
 BBCLASSEXTEND = "native nativesdk"
+
+CVE_PRODUCT = "openssl:openssl"
