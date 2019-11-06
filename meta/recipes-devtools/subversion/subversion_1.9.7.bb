@@ -10,6 +10,8 @@ BBCLASSEXTEND = "native"
 
 inherit gettext pkgconfig
 
+CVE_PRODUCT = "apache:subversion"
+
 SRC_URI = "${APACHE_MIRROR}/${BPN}/${BPN}-${PV}.tar.bz2 \
            file://disable_macos.patch \
            file://serf.m4-Regex-modified-to-allow-D-in-paths.patch \
