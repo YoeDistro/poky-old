@@ -40,3 +40,5 @@ do_install () {
 ARM_INSTRUCTION_SET = "arm"
 
 BBCLASSEXTEND = "native nativesdk"
+
+CVE_PRODUCT = "squashfs"
