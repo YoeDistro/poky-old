@@ -21,7 +21,7 @@ do_install() {
 	do
 		j=`echo ${i} | sed s/\;/\ /g`
 		id=`echo ${i} | sed -e 's/^.*;//' -e 's/;.*//'`
-		echo "$id::respawn:${base_sbindir}/getty ${j}" >> ${D}${sysconfdir}/inittab
+		echo "$id::respawn:${base_sbindir}/getty -L ${j}" >> ${D}${sysconfdir}/inittab
 	done
 }
 
