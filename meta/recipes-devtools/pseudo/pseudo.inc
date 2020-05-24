@@ -29,6 +29,8 @@ NO32LIBS_class-nativesdk = "1"
 
 PSEUDO_EXTRA_OPTS ?= "--enable-force-async --without-passwd-fallback --enable-epoll --enable-xattr"
 
+BUILD_CFLAGS += "-Wl,--allow-multiple-definition"
+
 # Compile for the local machine arch...
 do_compile () {
 	if [ "${SITEINFO_BITS}" = "64" ]; then
