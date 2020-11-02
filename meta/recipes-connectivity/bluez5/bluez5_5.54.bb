@@ -1,5 +1,7 @@
 require bluez5.inc
 
+SRC_URI += " file://CVE-2020-27153.patch"
+
 SRC_URI[md5sum] = "e637feb2dbb7582bbbff1708367a847c"
 SRC_URI[sha256sum] = "68cdab9e63e8832b130d5979dc8c96fdb087b31278f342874d992af3e56656dc"
 
