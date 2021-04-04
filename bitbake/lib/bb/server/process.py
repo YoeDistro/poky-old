@@ -392,11 +392,6 @@ class ServerCommunicator():
 
     def runCommand(self, command):
         self.connection.send(command)
-        if not self.recv.poll(10):
-            logger.info("No reply from server in 10s")
-            poutput = subprocess.check_output("ps ax", stderr=subprocess.STDOUT, shell=True)
-            logger.info("Processes:\n%s\n" % poutput.decode("utf-8"))
-            raise ProcessTimeout("Timeout while waiting for a reply from the bitbake server (10s)")
         if not self.recv.poll(30):
             logger.info("No reply from server in 30s")
             if not self.recv.poll(30):
