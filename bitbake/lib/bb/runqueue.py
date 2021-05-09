@@ -2877,6 +2877,8 @@ def update_scenequeue_data(tids, sqdata, rqdata, rq, cooker, stampcache, sqrq, s
             continue
         if tid in sqrq.scenequeue_covered:
             continue
+        if tid in sqrq.scenequeue_notcovered:
+            continue
         if tid in sqrq.sq_deferred:
             continue
         sqdata.outrightfail.add(tid)
