@@ -10,6 +10,11 @@ SRC_URI = "${GNU_MIRROR}/tar/tar-${PV}.tar.bz2"
 
 SRC_URI[sha256sum] = "b44cc67f8a1f6b0250b7c860e952b37e8ed932a90bd9b1862a511079255646ff"
 
+# https://bugzilla.redhat.com/show_bug.cgi?id=280961 - issue affects paxutils included in tar
+# http://cvs.savannah.gnu.org/viewvc/paxutils/paxutils/paxlib/names.c?r1=1.2&r2=1.4 was the fix
+# included in tar 1.19 and later
+CVE_CHECK_WHITELIST += "CVE-2007-4476"
+
 inherit autotools gettext texinfo
 
 PACKAGECONFIG ??= ""
