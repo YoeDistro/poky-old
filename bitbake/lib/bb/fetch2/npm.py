@@ -40,6 +40,7 @@ from bb.fetch2 import check_network_access
 from bb.fetch2 import runfetchcmd
 from bb.utils import is_semver
 
+
 def npm_package(package):
     """Convert the npm package name to remove unsupported character"""
     # Scoped package names (with the @) use the same naming convention
@@ -48,13 +49,16 @@ def npm_package(package):
         return re.sub("/", "-", package[1:])
     return package
 
+
 def npm_filename(package, version):
     """Get the filename of a npm package"""
     return npm_package(package) + "-" + version + ".tgz"
 
+
 def npm_localfile(package, version):
     """Get the local filename of a npm package"""
     return os.path.join("npm2", npm_filename(package, version))
+
 
 def npm_integrity(integrity):
     """
@@ -64,6 +68,7 @@ def npm_integrity(integrity):
     algo, value = integrity.split("-", maxsplit=1)
     return "%ssum" % algo, base64.b64decode(value).hex()
 
+
 def npm_unpack(tarball, destdir, d):
     """Unpack a npm tarball"""
     bb.utils.mkdirhier(destdir)
@@ -72,14 +77,33 @@ def npm_unpack(tarball, destdir, d):
     cmd += " --strip-components=1"
     runfetchcmd(cmd, d, workdir=destdir)
 
+
 class NpmEnvironment(object):
     """
     Using a npm config file seems more reliable than using cli arguments.
     This class allows to create a controlled environment for npm commands.
     """
-    def __init__(self, d, configs=None):
+
+    def __init__(self, d, configs=None, npmrc=None):
         self.d = d
-        self.configs = configs
+
+        if configs:
+            self.user_config = tempfile.NamedTemporaryFile(
+                mode="w", buffering=1)
+            self.user_config_name = self.user_config.name
+            for key, value in configs:
+                self.user_config.write("%s=%s\n" % (key, value))
+        else:
+            self.user_config_name = "/dev/null"
+
+        if npmrc:
+            self.global_config_name = npmrc
+        else:
+            self.global_config_name = "/dev/null"
+
+    def __del__(self):
+        if self.user_config:
+            self.user_config.close()
 
     def run(self, cmd, args=None, configs=None, workdir=None):
         """Run npm command in a controlled environment"""
@@ -87,29 +111,26 @@ class NpmEnvironment(object):
             d = bb.data.createCopy(self.d)
             d.setVar("HOME", tmpdir)
 
-            cfgfile = os.path.join(tmpdir, "npmrc")
-
             if not workdir:
                 workdir = tmpdir
 
             def _run(cmd):
-                cmd = "NPM_CONFIG_USERCONFIG=%s " % cfgfile + cmd
-                cmd = "NPM_CONFIG_GLOBALCONFIG=%s " % cfgfile + cmd
+                cmd = "NPM_CONFIG_USERCONFIG=%s " % (
+                    self.user_config_name) + cmd
+                cmd = "NPM_CONFIG_GLOBALCONFIG=%s " % (
+                    self.global_config_name) + cmd
                 return runfetchcmd(cmd, d, workdir=workdir)
-
-            if self.configs:
-                for key, value in self.configs:
-                    _run("npm config set %s %s" % (key, shlex.quote(value)))
 
             if configs:
                 for key, value in configs:
-                    _run("npm config set %s %s" % (key, shlex.quote(value)))
+                    cmd += " --%s=%s" % (key, shlex.quote(value))
 
             if args:
                 for key, value in args:
                     cmd += " --%s=%s" % (key, shlex.quote(value))
 
             return _run(cmd)
+
 
 class Npm(FetchMethod):
     """Class to fetch a package from a npm registry"""
@@ -185,8 +206,8 @@ class Npm(FetchMethod):
                     raise FetchError(error.get("summary"), ud.url)
 
                 if ud.version == "latest":
-                    bb.warn("The npm package %s is using the latest " \
-                            "version available. This could lead to " \
+                    bb.warn("The npm package %s is using the latest "
+                            "version available. This could lead to "
                             "non-reproducible builds." % pkgver)
                 elif ud.version != view.get("version"):
                     raise ParameterError("Invalid 'version' parameter", ud.url)
