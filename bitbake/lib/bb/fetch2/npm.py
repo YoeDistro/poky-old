@@ -4,21 +4,15 @@
 #
 """
 BitBake 'Fetch' npm implementation
-
 npm fetcher support the SRC_URI with format of:
 SRC_URI = "npm://some.registry.url;OptionA=xxx;OptionB=xxx;..."
-
 Supported SRC_URI options are:
-
 - package
    The npm package name. This is a mandatory parameter.
-
 - version
     The npm package version. This is a mandatory parameter.
-
 - downloadfilename
     Specifies the filename used when storing the downloaded file.
-
 - destsuffix
     Specifies the directory to use to unpack the package (default: npm).
 """
@@ -74,8 +68,10 @@ def npm_unpack(tarball, destdir, d):
     bb.utils.mkdirhier(destdir)
     cmd = "tar --extract --gzip --file=%s" % shlex.quote(tarball)
     cmd += " --no-same-owner"
+    cmd += " --delay-directory-restore"
     cmd += " --strip-components=1"
     runfetchcmd(cmd, d, workdir=destdir)
+    runfetchcmd("chmod -R +X %s" % (destdir), d, quiet=True, workdir=destdir)
 
 
 class NpmEnvironment(object):
@@ -91,37 +87,44 @@ class NpmEnvironment(object):
             self.user_config = tempfile.NamedTemporaryFile(
                 mode="w", buffering=1)
             self.user_config_name = self.user_config.name
+
             for key, value in configs:
                 self.user_config.write("%s=%s\n" % (key, value))
         else:
-            self.user_config_name = "/dev/null"
+            self.user_config_name = ""
 
-        if npmrc:
-            self.global_config_name = npmrc
-        else:
-            self.global_config_name = "/dev/null"
+            if npmrc:
+                self.global_config_name = npmrc
+            else:
+                self.global_config_name = "/dev/null"
 
     def __del__(self):
-        if self.user_config:
+        if hasattr(self, "user_config"):
             self.user_config.close()
 
     def run(self, cmd, args=None, configs=None, workdir=None):
         """Run npm command in a controlled environment"""
         with tempfile.TemporaryDirectory() as tmpdir:
             d = bb.data.createCopy(self.d)
-            d.setVar("HOME", tmpdir)
 
             if not workdir:
+                d.setVar("HOME", tmpdir)
                 workdir = tmpdir
+            else:
+                d.setVar("HOME", workdir)
 
             def _run(cmd):
-                cmd = "NPM_CONFIG_USERCONFIG=%s " % (
-                    self.user_config_name) + cmd
-                cmd = "NPM_CONFIG_GLOBALCONFIG=%s " % (
-                    self.global_config_name) + cmd
+                if self.user_config_name != "":
+                    cmd = "NPM_CONFIG_USERCONFIG=%s " % (
+                        self.user_config_name) + cmd
+                else:
+                    cmd = "NPM_CONFIG_GLOBALCONFIG=%s " % (
+                        self.global_config_name) + cmd
                 return runfetchcmd(cmd, d, workdir=workdir)
 
             if configs:
+                bb.warn("Use of configs argument of NpmEnvironment.run() function"
+                        " is deprecated. Please use args argument instead.")
                 for key, value in configs:
                     cmd += " --%s=%s" % (key, shlex.quote(value))
 
@@ -186,14 +189,14 @@ class Npm(FetchMethod):
 
     def _resolve_proxy_url(self, ud, d):
         def _npm_view():
-            configs = []
-            configs.append(("json", "true"))
-            configs.append(("registry", ud.registry))
+            args = []
+            args.append(("json", "true"))
+            args.append(("registry", ud.registry))
             pkgver = shlex.quote(ud.package + "@" + ud.version)
             cmd = ud.basecmd + " view %s" % pkgver
             env = NpmEnvironment(d)
             check_network_access(d, cmd, ud.registry)
-            view_string = env.run(cmd, configs=configs)
+            view_string = env.run(cmd, args=args)
 
             if not view_string:
                 raise FetchError("Unavailable package %s" % pkgver, ud.url)
