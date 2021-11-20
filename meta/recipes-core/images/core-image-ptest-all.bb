@@ -1,7 +1,6 @@
-inherit features_check
+inherit core-image features_check
 REQUIRED_DISTRO_FEATURES = "ptest"
 
-require core-image-minimal.bb
 require conf/distro/include/ptest-packagelists.inc
 
 DESCRIPTION += "Also includes ptest packages."
