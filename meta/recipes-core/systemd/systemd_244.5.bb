@@ -28,6 +28,11 @@ SRC_URI += "file://touchscreen.rules \
            file://network-merge-link_drop-and-link_detach_from_manager.patch \
            file://network-also-drop-requests-when-link-enters-linger-state.patch \
            file://network-fix-Link-reference-counter-issue.patch \
+           file://rm-rf-refactor-rm-rf-children-split-out-body-of-directory.patch \
+           file://rm-rf-optionally-fsync-after-removing-directory-tree.patch \
+           file://CVE-2021-3997-1.patch \
+           file://CVE-2021-3997-2.patch \
+           file://CVE-2021-3997-3.patch \
            "
 
 # patches needed by musl
@@ -96,6 +101,7 @@ PACKAGECONFIG ??= " \
     timesyncd \
     utmp \
     vconsole \
+    wheel-group \
     xz \
 "
 
@@ -188,6 +194,7 @@ PACKAGECONFIG[sbinmerge] = "-Dsplit-bin=false,-Dsplit-bin=true"
 PACKAGECONFIG[utmp] = "-Dutmp=true,-Dutmp=false"
 PACKAGECONFIG[valgrind] = "-DVALGRIND=1,,valgrind"
 PACKAGECONFIG[vconsole] = "-Dvconsole=true,-Dvconsole=false,,${PN}-vconsole-setup"
+PACKAGECONFIG[wheel-group] = "-Dwheel-group=true, -Dwheel-group=false"
 # Verify keymaps on locale change
 PACKAGECONFIG[xkbcommon] = "-Dxkbcommon=true,-Dxkbcommon=false,libxkbcommon"
 PACKAGECONFIG[xz] = "-Dxz=true,-Dxz=false,xz"
