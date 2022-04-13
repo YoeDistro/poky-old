@@ -1376,12 +1376,14 @@ class BaseConfig(object):
                 self.qemu_opt += '-display none'
 
         if self.sdl == True or self.gtk == True or self.egl_headless == True:
-            if self.gl or self.gl_es or self.egl_headless:
-                self.qemu_opt += ' -device virtio-vga-gl '
-            else:
-                self.qemu_opt += ' -device virtio-vga '
 
-            self.qemu_opt += '-display '
+            if self.qemu_system.endswith(('i386', 'x86_64')):
+                if self.gl or self.gl_es or self.egl_headless:
+                    self.qemu_opt += ' -device virtio-vga-gl '
+                else:
+                    self.qemu_opt += ' -device virtio-vga '
+
+            self.qemu_opt += ' -display '
             if self.egl_headless == True:
                 self.set_dri_path()
                 self.qemu_opt += 'egl-headless,'
