@@ -510,7 +510,8 @@ do_kernel_version_sanity_check() {
 	exit 0
 }
 
-addtask shared_workdir after do_compile before do_compile_kernelmodules
+addtask shared_workdir_prepare after do_compile before do_compile_kernelmodules
+addtask shared_workdir after do_compile_kernelmodules
 addtask shared_workdir_setscene
 
 do_shared_workdir_setscene () {
@@ -526,8 +527,14 @@ emit_depmod_pkgdata() {
 
 PACKAGEFUNCS += "emit_depmod_pkgdata"
 
-do_shared_workdir[cleandirs] += " ${STAGING_KERNEL_BUILDDIR}"
 do_shared_workdir () {
+	cd ${B}
+
+	kerneldir=${STAGING_KERNEL_BUILDDIR}
+}
+
+do_shared_workdir_prepare[cleandirs] += " ${STAGING_KERNEL_BUILDDIR}"
+do_shared_workdir_prepare () {
 	cd ${B}
 
 	kerneldir=${STAGING_KERNEL_BUILDDIR}
