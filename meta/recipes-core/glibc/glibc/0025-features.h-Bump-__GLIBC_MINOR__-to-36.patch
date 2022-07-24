@@ -1,0 +1,24 @@
+From a798cf875e18492273d0b70feae9c4e1aa1f89d0 Mon Sep 17 00:00:00 2001
+From: Khem Raj <raj.khem@gmail.com>
+Date: Mon, 3 May 2021 12:02:17 -0700
+Subject: [PATCH] features.h: Bump __GLIBC_MINOR__ to 36
+
+Upstream-Status: Pending
+Signed-off-by: Khem Raj <raj.khem@gmail.com>
+---
+ include/features.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/features.h b/include/features.h
+index 76b8b973d4..123de9fd47 100644
+--- a/include/features.h
++++ b/include/features.h
+@@ -479,7 +479,7 @@
+ /* Major and minor version number of the GNU C library package.  Use
+    these macros to test for features in specific releases.  */
+ #define	__GLIBC__	2
+-#define	__GLIBC_MINOR__	35
++#define	__GLIBC_MINOR__	36
+ 
+ #define __GLIBC_PREREQ(maj, min) \
+ 	((__GLIBC__ << 16) + __GLIBC_MINOR__ >= ((maj) << 16) + (min))
