@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 #
+# Copyright OpenEmbedded Contributors
+#
+# SPDX-License-Identifier: MIT
+#
+
 # This file was copied from poky(or oe-core)/scripts/oe-setup-layers by running
 #
 # bitbake-layers create-layers-setup destdir
 #
 # It is recommended that you do not modify this file directly, but rather re-run the above command to get the freshest upstream copy.
-#
 
 import argparse
 import json
