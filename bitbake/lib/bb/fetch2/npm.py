@@ -4,21 +4,15 @@
 #
 """
 BitBake 'Fetch' npm implementation
-
 npm fetcher support the SRC_URI with format of:
 SRC_URI = "npm://some.registry.url;OptionA=xxx;OptionB=xxx;..."
-
 Supported SRC_URI options are:
-
 - package
    The npm package name. This is a mandatory parameter.
-
 - version
     The npm package version. This is a mandatory parameter.
-
 - downloadfilename
     Specifies the filename used when storing the downloaded file.
-
 - destsuffix
     Specifies the directory to use to unpack the package (default: npm).
 """
@@ -40,6 +34,7 @@ from bb.fetch2 import check_network_access
 from bb.fetch2 import runfetchcmd
 from bb.utils import is_semver
 
+
 def npm_package(package):
     """Convert the npm package name to remove unsupported character"""
     # Scoped package names (with the @) use the same naming convention
@@ -48,13 +43,16 @@ def npm_package(package):
         return re.sub("/", "-", package[1:])
     return package
 
+
 def npm_filename(package, version):
     """Get the filename of a npm package"""
     return npm_package(package) + "-" + version + ".tgz"
 
+
 def npm_localfile(package, version):
     """Get the local filename of a npm package"""
     return os.path.join("npm2", npm_filename(package, version))
+
 
 def npm_integrity(integrity):
     """
@@ -64,52 +62,78 @@ def npm_integrity(integrity):
     algo, value = integrity.split("-", maxsplit=1)
     return "%ssum" % algo, base64.b64decode(value).hex()
 
+
 def npm_unpack(tarball, destdir, d):
     """Unpack a npm tarball"""
     bb.utils.mkdirhier(destdir)
     cmd = "tar --extract --gzip --file=%s" % shlex.quote(tarball)
     cmd += " --no-same-owner"
+    cmd += " --delay-directory-restore"
     cmd += " --strip-components=1"
     runfetchcmd(cmd, d, workdir=destdir)
+    runfetchcmd("chmod -R +X %s" % (destdir), d, quiet=True, workdir=destdir)
+
 
 class NpmEnvironment(object):
     """
     Using a npm config file seems more reliable than using cli arguments.
     This class allows to create a controlled environment for npm commands.
     """
-    def __init__(self, d, configs=None):
+
+    def __init__(self, d, configs=None, npmrc=None):
         self.d = d
-        self.configs = configs
+
+        if configs:
+            self.user_config = tempfile.NamedTemporaryFile(
+                mode="w", buffering=1)
+            self.user_config_name = self.user_config.name
+
+            for key, value in configs:
+                self.user_config.write("%s=%s\n" % (key, value))
+        else:
+            self.user_config_name = ""
+
+            if npmrc:
+                self.global_config_name = npmrc
+            else:
+                self.global_config_name = "/dev/null"
+
+    def __del__(self):
+        if hasattr(self, "user_config"):
+            self.user_config.close()
 
     def run(self, cmd, args=None, configs=None, workdir=None):
         """Run npm command in a controlled environment"""
         with tempfile.TemporaryDirectory() as tmpdir:
             d = bb.data.createCopy(self.d)
-            d.setVar("HOME", tmpdir)
-
-            cfgfile = os.path.join(tmpdir, "npmrc")
 
             if not workdir:
+                d.setVar("HOME", tmpdir)
                 workdir = tmpdir
+            else:
+                d.setVar("HOME", workdir)
 
             def _run(cmd):
-                cmd = "NPM_CONFIG_USERCONFIG=%s " % cfgfile + cmd
-                cmd = "NPM_CONFIG_GLOBALCONFIG=%s " % cfgfile + cmd
+                if self.user_config_name != "":
+                    cmd = "NPM_CONFIG_USERCONFIG=%s " % (
+                        self.user_config_name) + cmd
+                else:
+                    cmd = "NPM_CONFIG_GLOBALCONFIG=%s " % (
+                        self.global_config_name) + cmd
                 return runfetchcmd(cmd, d, workdir=workdir)
 
-            if self.configs:
-                for key, value in self.configs:
-                    _run("npm config set %s %s" % (key, shlex.quote(value)))
-
             if configs:
+                bb.warn("Use of configs argument of NpmEnvironment.run() function"
+                        " is deprecated. Please use args argument instead.")
                 for key, value in configs:
-                    _run("npm config set %s %s" % (key, shlex.quote(value)))
+                    cmd += " --%s=%s" % (key, shlex.quote(value))
 
             if args:
                 for key, value in args:
                     cmd += " --%s=%s" % (key, shlex.quote(value))
 
             return _run(cmd)
+
 
 class Npm(FetchMethod):
     """Class to fetch a package from a npm registry"""
@@ -165,14 +189,14 @@ class Npm(FetchMethod):
 
     def _resolve_proxy_url(self, ud, d):
         def _npm_view():
-            configs = []
-            configs.append(("json", "true"))
-            configs.append(("registry", ud.registry))
+            args = []
+            args.append(("json", "true"))
+            args.append(("registry", ud.registry))
             pkgver = shlex.quote(ud.package + "@" + ud.version)
             cmd = ud.basecmd + " view %s" % pkgver
             env = NpmEnvironment(d)
             check_network_access(d, cmd, ud.registry)
-            view_string = env.run(cmd, configs=configs)
+            view_string = env.run(cmd, args=args)
 
             if not view_string:
                 raise FetchError("Unavailable package %s" % pkgver, ud.url)
@@ -185,8 +209,8 @@ class Npm(FetchMethod):
                     raise FetchError(error.get("summary"), ud.url)
 
                 if ud.version == "latest":
-                    bb.warn("The npm package %s is using the latest " \
-                            "version available. This could lead to " \
+                    bb.warn("The npm package %s is using the latest "
+                            "version available. This could lead to "
                             "non-reproducible builds." % pkgver)
                 elif ud.version != view.get("version"):
                     raise ParameterError("Invalid 'version' parameter", ud.url)
